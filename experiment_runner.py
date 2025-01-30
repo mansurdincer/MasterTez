@@ -39,8 +39,9 @@ def print_debug(message):
 
 def dynamic_parameters(population_size, generations):
     """Popülasyon ve nesil sayısına göre çaprazlama ve mutasyon oranlarını hesaplar."""
-    cxpb = 0.8 + (math.log(population_size) / 10)  # Çaprazlama oranı
-    mutpb = 1 / math.sqrt(generations)  # Mutasyon oranı
+    
+    cxpb = min(0.7 + (math.log(population_size) / 15), 0.9)  # Çaprazlama oranı sınırlandırıldı
+    mutpb = max(0.075, min(1 / math.sqrt(generations), 0.3)) # Mutasyon oranı kontrol altına alındı
 
     return {
         "population_size": population_size,
@@ -49,10 +50,9 @@ def dynamic_parameters(population_size, generations):
         "mutpb": round(mutpb, 3),
         "weights": (-2, -3, -10)  # Sabit fitness ağırlıkları
     }
-
 # Parametreleri belirleyerek experiments listesine ekleyelim
-population_values = [5, 10, 15, 20, 25, 30]  # Farklı popülasyon değerleri
-generation_values = [1, 5, 10, 20, 50, 100]  # Farklı nesil sayıları
+population_values = [5, 10, 15, 20, 50]  # Farklı popülasyon değerleri
+generation_values = [10, 20, 50, 250]  # Farklı nesil sayıları
 
 experiments = []
 
