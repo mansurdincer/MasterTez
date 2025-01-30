@@ -51,14 +51,20 @@ def dynamic_parameters(population_size, generations):
     }
 
 # Parametreleri belirleyerek experiments listesine ekleyelim
-population_values = [50, 100, 150, 200]  # Farklı popülasyon değerleri
-generation_values = [10, 50, 100, 200]  # Farklı nesil sayıları
+population_values = [5, 10, 15, 20, 25, 30]  # Farklı popülasyon değerleri
+generation_values = [1, 5, 10, 20, 50, 100]  # Farklı nesil sayıları
 
 experiments = []
 
 for pop in population_values:
     for gen in generation_values:
         experiments.append(dynamic_parameters(pop, gen))
+
+# Experiment listesini satır satır consola yazdır
+for i, exp in enumerate(experiments, start=1):
+    print(f"{i}: {exp}")
+
+input("Devam etmek için herhangi bir tuşa basın...")
 
 # Sonuçları saklamak için boş bir liste
 results = []
@@ -127,50 +133,132 @@ for i, exp in enumerate(experiments, start=1):
                     best_fitness, total_time, load_variance, type_changes])
     print_debug(f"Deney {i} tamamlandı. Fitness: {best_fitness}, Toplam Süre: {total_time} saat.")
 
+    #input("Devam etmek için herhangi bir tuşa basın...")
+
 # DataFrame oluştur ve Excel'e kaydet
 df = pd.DataFrame(results, columns=columns)
 df.to_excel("deney_sonuclari.xlsx", index=False)
 print_debug("✅ Tüm deneyler tamamlandı! Sonuçlar 'deney_sonuclari.xlsx' dosyasına kaydedildi.")
+# **Normalizasyon fonksiyonu**
+def normalize_column(df, col):
+    min_val = df[col].min()
+    max_val = df[col].max()
+    if max_val - min_val == 0:
+        df[f"Normalized_{col}"] = 0
+    else:
+        df[f"Normalized_{col}"] = (df[col] - min_val) / (max_val - min_val)
 
-# Excel dosyasını oku
+# Excel dosyasını tekrar oku
 df = pd.read_excel("deney_sonuclari.xlsx")
 
-# Fitness Ağırlıkları sütununun string olarak gelmesini önle
+# Fitness Ağırlıkları sütunu string olmaması için düzeltme
 if isinstance(df["Fitness Ağırlıkları"].iloc[0], str):
     df["Fitness Ağırlıkları"] = df["Fitness Ağırlıkları"].apply(lambda x: eval(x))
+
+# **Önce Fitness Ağırlıkları toplamını hesapla ve sütun ekle**
+df["Fitness_Ağırlıkları_Toplam"] = df["Fitness Ağırlıkları"].apply(lambda w: sum(w))
+
+# **İhtiyaç duyulan sütunları normalize et**
+normalize_column(df, "Fitness Değeri")
+normalize_column(df, "Toplam Süre (Saat)")
+normalize_column(df, "Makine Yük Dengesizliği")
+normalize_column(df, "Popülasyon")
+normalize_column(df, "Nesiller")
+normalize_column(df, "Çaprazlama")
+normalize_column(df, "Mutasyon")
+normalize_column(df, "Fitness_Ağırlıkları_Toplam")
 
 # Alt grafikleri olan tek bir HTML sayfası oluştur
 fig = make_subplots(
     rows=3, cols=1,
     subplot_titles=(
-        "Fitness Değeri vs. Parametreler", 
-        "Toplam Süre (Saat) vs. Parametreler", 
-        "Makine Yük Dengesizliği vs. Parametreler"
+        "Fitness Değeri vs. Parametreler (Normalize)", 
+        "Toplam Süre (Saat) vs. Parametreler (Normalize)", 
+        "Makine Yük Dengesizliği vs. Parametreler (Normalize)"
     )
 )
 
-# Fitness Değeri Grafiği
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Fitness Değeri"], mode='lines+markers', name='Fitness Değeri'), row=1, col=1)
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Popülasyon"], mode='lines', name='Popülasyon', line=dict(dash='dot')), row=1, col=1)
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Nesiller"], mode='lines', name='Nesiller', line=dict(dash='dashdot')), row=1, col=1)
+# Birinci grafik: Normalleştirilmiş Fitness vs. (Popülasyon, Nesiller)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Fitness Değeri"], 
+        mode='lines+markers', 
+        name='Fitness Değeri (Norm)'
+    ), row=1, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Popülasyon"], 
+        mode='lines', 
+        name='Popülasyon (Norm)',
+        line=dict(dash='dot')
+    ), row=1, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Nesiller"], 
+        mode='lines', 
+        name='Nesiller (Norm)', 
+        line=dict(dash='dashdot')
+    ), row=1, col=1
+)
 
-# Toplam Süre Grafiği
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Toplam Süre (Saat)"], mode='lines+markers', name='Toplam Süre'), row=2, col=1)
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Çaprazlama"], mode='lines', name='Çaprazlama Oranı', line=dict(dash='dot')), row=2, col=1)
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Mutasyon"], mode='lines', name='Mutasyon Oranı', line=dict(dash='dashdot')), row=2, col=1)
+# İkinci grafik: Normalleştirilmiş Toplam Süre vs. (Çaprazlama, Mutasyon)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Toplam Süre (Saat)"], 
+        mode='lines+markers', 
+        name='Toplam Süre (Norm)'
+    ), row=2, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Çaprazlama"], 
+        mode='lines', 
+        name='Çaprazlama (Norm)',
+        line=dict(dash='dot')
+    ), row=2, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Mutasyon"], 
+        mode='lines', 
+        name='Mutasyon (Norm)', 
+        line=dict(dash='dashdot')
+    ), row=2, col=1
+)
 
-# Makine Yük Dengesizliği Grafiği
-fig.add_trace(go.Scatter(x=df["Deney No"], y=df["Makine Yük Dengesizliği"], mode='lines+markers', name='Makine Yük Dengesizliği'), row=3, col=1)
-fig.add_trace(go.Scatter(x=df["Deney No"], y=[sum(w) for w in df["Fitness Ağırlıkları"]], mode='lines', name='Fitness Ağırlıkları Toplamı', line=dict(dash='dot')), row=3, col=1)
+# Üçüncü grafik: Normalleştirilmiş Makine Yük Dengesizliği vs. Fitness Ağırlıkları Toplamı
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Makine Yük Dengesizliği"], 
+        mode='lines+markers', 
+        name='Makine Yük Dengesizliği (Norm)'
+    ), row=3, col=1
+)
+fig.add_trace(
+    go.Scatter(
+        x=df["Deney No"], 
+        y=df["Normalized_Fitness_Ağırlıkları_Toplam"], 
+        mode='lines', 
+        name='Fitness Ağırlıkları Toplamı (Norm)',
+        line=dict(dash='dot')
+    ), row=3, col=1
+)
 
-# Layout Ayarları
 fig.update_layout(
-    height=1000, width=1200, 
-    title_text="Genetik Algoritma Deney Sonuçları - Parametre Etkileri",
+    height=1000, width=1200,
+    title_text="Genetik Algoritma Deney Sonuçları - Parametre Etkileri (Normalleştirilmiş)",
     showlegend=True
 )
 
-# HTML olarak kaydet
 fig.write_html("deney_sonuclari_grafik.html")
 
-print("✅ Açıklayıcı HTML grafik oluşturuldu: deney_sonuclari_grafik.html")
+print("✅ Normalleştirilmiş verilerle HTML grafik oluşturuldu: deney_sonuclari_grafik.html")
