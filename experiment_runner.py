@@ -1,8 +1,11 @@
 import pandas as pd
 import plotly.graph_objects as go
+import math
 from plotly.subplots import make_subplots
 from genetic_algorithm import GeneticScheduler
 from data_processor import DataProcessor
+
+
 
 def print_debug(message):
     """Zaman damgalı debug mesajı yazdırır."""
@@ -10,29 +13,52 @@ def print_debug(message):
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {message}")
 
 # Deney yapmak istediğimiz parametreler
-experiments = [
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 60, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 70, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 80, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 12, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 14, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 16, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 18, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.7, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.6, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.9, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 1.0, "mutpb": 0.05, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.01, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.02, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.08, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.10, "weights": (-2, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-1, -2, -5)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-3, -3, -10)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -4, -8)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-5, -2, -8)},
-    {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -7)}
-]
+# experiments = [
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 60, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 70, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 80, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 12, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 14, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 16, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 18, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.7, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.6, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.9, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 1.0, "mutpb": 0.05, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.01, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.02, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.08, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.10, "weights": (-2, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-1, -2, -5)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-3, -3, -10)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -4, -8)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-5, -2, -8)},
+#     {"population_size": 50, "generations": 10, "cxpb": 0.8, "mutpb": 0.05, "weights": (-2, -3, -7)}
+# ]
+
+def dynamic_parameters(population_size, generations):
+    """Popülasyon ve nesil sayısına göre çaprazlama ve mutasyon oranlarını hesaplar."""
+    cxpb = 0.8 + (math.log(population_size) / 10)  # Çaprazlama oranı
+    mutpb = 1 / math.sqrt(generations)  # Mutasyon oranı
+
+    return {
+        "population_size": population_size,
+        "generations": generations,
+        "cxpb": round(cxpb, 3),
+        "mutpb": round(mutpb, 3),
+        "weights": (-2, -3, -10)  # Sabit fitness ağırlıkları
+    }
+
+# Parametreleri belirleyerek experiments listesine ekleyelim
+population_values = [50, 100, 150, 200]  # Farklı popülasyon değerleri
+generation_values = [10, 50, 100, 200]  # Farklı nesil sayıları
+
+experiments = []
+
+for pop in population_values:
+    for gen in generation_values:
+        experiments.append(dynamic_parameters(pop, gen))
 
 # Sonuçları saklamak için boş bir liste
 results = []
