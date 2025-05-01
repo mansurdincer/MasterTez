@@ -1,4 +1,5 @@
 import sys
+import webbrowser
 from data_processor import DataProcessor
 from genetic_algorithm import GeneticScheduler, print_timestamp
 from visualizer import ScheduleVisualizer
@@ -99,12 +100,14 @@ def main(test_mode=False):
     gantt_filename = 'test_cizelge.html' if test_mode else 'cizelge.html'
     visualizer.create_gantt(gantt_schedules, gantt_filename)
     print_timestamp(f"Gantt şeması kaydedildi: {gantt_filename}")
+    webbrowser.open(gantt_filename)
     
     # Analiz grafikleri oluştur
     analysis_filename = 'test_analiz.html' if test_mode else 'analiz.html'
     visualizer.create_analysis_charts(scheduler.debug_stats, analysis_filename)
     print_timestamp(f"Analiz grafikleri kaydedildi: {analysis_filename}")
+    webbrowser.open(analysis_filename)
 
 if __name__ == '__main__':
     test_mode = '--test' in sys.argv
-    main(test_mode=test_mode) 
+    main(test_mode=test_mode)

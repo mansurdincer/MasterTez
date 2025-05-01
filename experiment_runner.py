@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.graph_objects as go
 import math
+import webbrowser
 from plotly.subplots import make_subplots
 from genetic_algorithm import GeneticScheduler
 from data_processor import DataProcessor
@@ -262,3 +263,4 @@ fig.update_layout(
 fig.write_html("deney_sonuclari_grafik.html")
 
 print("✅ Normalleştirilmiş verilerle HTML grafik oluşturuldu: deney_sonuclari_grafik.html")
+webbrowser.open("deney_sonuclari_grafik.html")
